@@ -9,6 +9,7 @@
   "author": "Scott Skender",
   "license": "MIT",
   "dependencies": {
+    "@prisma/client": "^2.30.0",
     "apollo-server": "^3.3.0",
     "graphql": "^15.5.1"
   },
@@ -17,7 +18,8 @@
     "eslint-config-prettier": "^8.3.0",
     "mocha": "^9.1.0",
     "nodemon": "^2.0.12",
-    "prettier": "2.3.2"
+    "prettier": "2.3.2",
+    "prisma": "^2.30.0"
   },
   "lint-staged": {
     "*.js": [
