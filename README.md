@@ -20,3 +20,8 @@ I think the relational aspect of messages (tracking senders/recipients) was reas
 
 ### Testing
 `docker compose run --rm api npm run test`
+
+# ToDos
+- Handle null userId header with a useful error explanation
+- Setup a GraphQL subscription to allow streaming of messages
+- Configure schema introspection to the playground can infer queries and mutations

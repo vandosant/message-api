@@ -1,22 +1,5 @@
 const { ApolloServer, gql } = require("apollo-server");
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
-
-const getUser = async (id) => await prisma.user.findUnique({ where: { id } });
-const getUserWhere = async (where) => await prisma.user.findUnique({ where });
-const getMessages = async (where) =>
-  await prisma.message.findMany({
-    where,
-    include: { from: true, to: true },
-    take: 100,
-    orderBy: { createdAt: "desc" },
-  });
-const createMessage = async ({ body, fromId, toId }) =>
-  await prisma.message.create({
-    data: { body, fromId, toId },
-    include: { from: true, to: true },
-  });
+const { db } = require("./db");
 
 const typeDefs = gql`
   type User {
@@ -45,23 +28,23 @@ const resolvers = {
   Query: {
     messages: (_parent, { from }, { user }) => {
       if (from) {
-        return getMessages({ from: { username: from }, toId: user.id });
+        return db.getMessages({ from: { username: from }, toId: user.id });
       } else {
-        return getMessages({ toId: user.id });
+        return db.getMessages({ toId: user.id });
       }
     },
   },
   Mutation: {
     sendMessage: async (_, { body, to }, { user }) => {
-      const { id: toId } = await getUserWhere({ username: to });
-      return await createMessage({ body, fromId: user.id, toId });
+      const { id: toId } = await db.getUserWhere({ username: to });
+      return await db.createMessage({ body, fromId: user.id, toId });
     },
   },
 };
 
 const context = async ({ req = {} }) => ({
-  db: prisma,
-  user: await getUser(req.headers.userId),
+  db: db.client,
+  user: await db.getUser(req.headers.userid),
 });
 
 const server = new ApolloServer({
@@ -70,4 +53,4 @@ const server = new ApolloServer({
   context,
 });
 
-module.exports = { server, context, resolvers, typeDefs };
+module.exports = { server, db, context, resolvers, typeDefs };

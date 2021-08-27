@@ -31,11 +31,11 @@ const SEND_MESSAGE = gql`
   }
 `;
 
-describe("with userId header", async () => {
+describe("with userid header", async () => {
   let db;
 
   beforeEach(async () => {
-    const ctx = await context({ req: { headers: { userId: 1 } } });
+    const ctx = await context({ req: { headers: { userid: 1 } } });
     db = ctx.db;
     await db.message.deleteMany();
     await db.user.deleteMany();
