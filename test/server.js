@@ -39,7 +39,10 @@ describe("with userId header", async () => {
     db = ctx.db;
     await db.message.deleteMany();
     await db.user.deleteMany();
+    return db;
   });
+
+  afterEach(async () => db.$disconnect());
 
   it("fetches messages", async () => {
     const fromUser = await db.user.create({
