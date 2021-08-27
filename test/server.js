@@ -42,7 +42,22 @@ describe("with userId header", async () => {
   });
 
   it("fetches messages", async () => {
-    const user = await db.user.create({ data: { username: "a" } });
+    const fromUser = await db.user.create({
+      data: { username: "b" },
+    });
+    const user = await db.user.create({
+      data: {
+        username: "a",
+        receivedMessages: {
+          create: Array(101)
+            .fill(0)
+            .map(() => ({
+              body: "hello!",
+              fromId: fromUser.id,
+            })),
+        },
+      },
+    });
 
     const server = new ApolloServer({
       typeDefs,
@@ -53,7 +68,7 @@ describe("with userId header", async () => {
     const res = await server.executeOperation({
       query: GET_MESSAGES,
     });
-    assert.equal(res.data.messages.length, 0);
+    assert.equal(res.data.messages.length, 100);
   });
 
   it("sends messages", async () => {
