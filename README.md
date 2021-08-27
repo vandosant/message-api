@@ -16,10 +16,28 @@ I think the relational aspect of messages (tracking senders/recipients) was reas
 
 # Setup
 ### Local setup
-`docker-compose up`
-
+1. Start the server: `docker-compose up`
+2. Navigate to http://localhost:4000 in a browser
+3. In [Apollo Studio](https://studio.apollographql.com/sandbox/explorer?overlay=connection-settings), add a `userid` header with a value of an existing user from the database (the server creates a couple on startup and logs the user ids)
+5. Send a message:
+```graphql
+mutation SendMessage {
+  sendMessage(to: "messagee", body: "hello!") {
+    body
+  }
+}
+```
+4. Query for messages, optionally filtering by user:
+```graphql
+query Query {
+  messages(from: "messager") {
+    to { username }
+    body
+  }
+}
+```
 ### Testing
-`docker compose run --rm api npm run test`
+`docker-compose run --rm api npm run test`
 
 # ToDos
 - Handle null userId header with a useful error explanation
