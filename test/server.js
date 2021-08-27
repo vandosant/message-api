@@ -1,7 +1,7 @@
 const assert = require("assert");
 const { ApolloServer, gql } = require("apollo-server");
 
-const { resolvers, typeDefs } = require("../index.js");
+const { context, resolvers, typeDefs } = require("../server.js");
 
 const GET_MESSAGES = gql`
   query GetMessages {
@@ -13,16 +13,28 @@ const GET_MESSAGES = gql`
   }
 `;
 
-it("fetches messages", async () => {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: () => ({ user: { id: 1, username: "aaa" } }),
+describe("with userId header", async () => {
+  let db;
+
+  beforeEach(async () => {
+    const ctx = await context({ req: { headers: { userId: 1 } } });
+    db = ctx.db;
+    await db.user.deleteMany();
   });
 
-  const res = await server.executeOperation({
-    query: GET_MESSAGES,
-    variables: { id: 1 },
+  it("fetches messages", async () => {
+    const user = await db.user.create({ data: { email: "a@a.com" } });
+
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: { db, user },
+    });
+
+    const res = await server.executeOperation({
+      query: GET_MESSAGES,
+      variables: { id: 1 },
+    });
+    assert.equal(res.data.messages.length, 0);
   });
-  assert.equal(res.data.messages.length, 2);
 });
