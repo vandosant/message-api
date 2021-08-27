@@ -5,8 +5,12 @@ const prisma = new PrismaClient();
 
 const getUser = async (id) => await prisma.user.findUnique({ where: { id } });
 const getUserWhere = async (where) => await prisma.user.findUnique({ where });
-const getMessages = async (toId) =>
-  await prisma.message.findMany({ where: { toId }, take: 100 });
+const getMessages = async (where) =>
+  await prisma.message.findMany({
+    where,
+    include: { from: true, to: true },
+    take: 100,
+  });
 const createMessage = async ({ body, fromId, toId }) =>
   await prisma.message.create({
     data: { body, fromId, toId },
@@ -28,7 +32,7 @@ const typeDefs = gql`
   }
 
   type Query {
-    messages: [Message]
+    messages(from: String): [Message]
   }
 
   type Mutation {
@@ -38,7 +42,13 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    messages: (_parent, _args, { user }) => getMessages(user.id),
+    messages: (_parent, { from }, { user }) => {
+      if (from) {
+        return getMessages({ from: { username: from }, toId: user.id });
+      } else {
+        return getMessages({ toId: user.id });
+      }
+    },
   },
   Mutation: {
     sendMessage: async (_, { body, to }, { user }) => {

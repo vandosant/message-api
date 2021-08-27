@@ -4,8 +4,8 @@ const { ApolloServer, gql } = require("apollo-server");
 const { context, resolvers, typeDefs } = require("../server.js");
 
 const GET_MESSAGES = gql`
-  query GetMessages {
-    messages {
+  query GetMessages($from: String) {
+    messages(from: $from) {
       to {
         username
       }
@@ -68,7 +68,43 @@ describe("with userId header", async () => {
     const res = await server.executeOperation({
       query: GET_MESSAGES,
     });
+
     assert.equal(res.data.messages.length, 100);
+  });
+
+  it("filters messages from a user", async () => {
+    const user = await db.user.create({
+      data: {
+        username: "a",
+        receivedMessages: {
+          create: [
+            {
+              body: "ahoy!",
+              from: { create: { username: "b" } },
+            },
+            {
+              body: "hello!",
+              from: { create: { username: "c" } },
+            },
+          ],
+        },
+      },
+    });
+
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: { db, user },
+    });
+
+    const res = await server.executeOperation({
+      query: GET_MESSAGES,
+      variables: { from: "c" },
+    });
+
+    assert.deepEqual(res.data.messages, [
+      { body: "hello!", to: { username: "a" }, from: { username: "c" } },
+    ]);
   });
 
   it("sends messages", async () => {
@@ -89,6 +125,7 @@ describe("with userId header", async () => {
       query: SEND_MESSAGE,
       variables: { to: toUser.username, body: "hello!" },
     });
+
     assert.deepEqual(res.data.sendMessage, {
       from: { username: "a" },
       to: { username: "b" },
