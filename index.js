@@ -6,12 +6,18 @@ server
     console.log(`🚀  Server ready at ${url}`);
   })
   .then(async () => {
-    const user = await db.client.user.upsert({
-      where: { username: "alice" },
-      update: { username: "alice" },
-      create: { username: "alice" },
+    const sender = await db.client.user.upsert({
+      where: { username: "messager" },
+      update: { username: "messager" },
+      create: { username: "messager" },
     });
-    console.log(`Configured a user with id: ${user.id}`);
+    const sendee = await db.client.user.upsert({
+      where: { username: "messagee" },
+      update: { username: "messagee" },
+      create: { username: "messagee" },
+    });
+    console.log(`Configured a user to send messages with id: ${sender.id}`);
+    console.log(`Configured a user to send messages to with id: ${sendee.id}`);
   })
   .catch((e) => {
     throw e;
