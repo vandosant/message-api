@@ -107,6 +107,47 @@ describe("with userId header", async () => {
     ]);
   });
 
+  it("orders by latest message", async () => {
+    const user = await db.user.create({
+      data: {
+        username: "a",
+      },
+    });
+    const fromUser = await db.user.create({
+      data: {
+        username: "b",
+      },
+    });
+    for (let i = 0; i < 10; i++) {
+      await db.message.create({
+        data: {
+          body: "hello!",
+          to: { connect: { id: user.id } },
+          from: { connect: { id: fromUser.id } },
+        },
+      });
+    }
+    await db.message.create({
+      data: {
+        body: "i'm back!",
+        to: { connect: { id: user.id } },
+        from: { connect: { id: fromUser.id } },
+      },
+    });
+
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      context: { db, user },
+    });
+
+    const res = await server.executeOperation({
+      query: GET_MESSAGES,
+    });
+
+    assert.deepEqual(res.data.messages[0].body, "i'm back!");
+  });
+
   it("sends messages", async () => {
     const user = await db.user.create({
       data: { username: "a" },

@@ -10,6 +10,7 @@ const getMessages = async (where) =>
     where,
     include: { from: true, to: true },
     take: 100,
+    orderBy: { createdAt: "desc" },
   });
 const createMessage = async ({ body, fromId, toId }) =>
   await prisma.message.create({
